@@ -1,83 +1,87 @@
-<html>
-<head>
-    <meta charset="UTF-8">
-    <title>ヒノMODダウンローダー</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-</head>
-<body>
-    <script type="text/javascript" src="/eel.js"></script>
-    <script type="text/javascript">
-        async function refresh_mods(){
-            document.getElementById("refresh_mods").disabled = true;
-            document.getElementById("download_btn").disabled = true;
-            document.getElementById("selected").innerText = "";
-            var mod_list = document.getElementById("mod_list");
-            mod_list.innerHTML = "";
-            var res = await eel.get_mods()();
-            document.getElementById("refresh_mods").disabled = false;
-            if (!res["success"]){
-                alert("MOD一覧の取得に失敗しました。\n10分ほど待ってからもう一度実行してみてください。\nそれでも解決しない場合は以下の情報を添付してお問い合わせ下さい。 \n"+res["message"]);
-                return;
-            }
-            var mods = res["mods"];
-            mods.forEach(mod=>{
-                var option = document.createElement("option");
-                option.value = mod;
-                option.text = mod;
-                mod_list.appendChild(option);
-            });
-        }
-        window.addEventListener("load", async function(){
-            await refresh_mods();
-            document.getElementById("mod_list").addEventListener("change", function(){
-                document.getElementById("download_btn").disabled = false;
-                document.getElementById("selected").innerText = document.getElementById("mod_list").value;
-            });
-            eel.expose(update_downloading_progress);
-            function update_downloading_progress(data) {
-                if (data["is_done"]){
-                    alert("ダウンロードが完了しました。");
-                }
-                if (!data["downloading"]){
-                    document.getElementById("download_progress").style.width = "0%";
-                    document.getElementById("download_status").style.display = "none";
-                    document.getElementById("refresh_mods").disabled = false;
-                    document.getElementById("download_btn").disabled = false;
+<html lang="ja">
+    <head>
+        <meta charset="UTF-8">
+        <title>ヒノMODダウンローダー</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+    </head>
+    <body>
+        <script type="text/javascript" src="/eel.js"></script>
+        <script type="text/javascript">
+            async function refresh_mods(){
+                document.getElementById("refresh_mods").disabled = true;
+                document.getElementById("download_btn").disabled = true;
+                document.getElementById("selected").innerText = "";
+                var mod_list = document.getElementById("mod_list");
+                mod_list.innerHTML = "";
+                var res = await eel.get_mods()();
+                document.getElementById("refresh_mods").disabled = false;
+                if (!res["success"]){
+                    alert("MOD一覧の取得に失敗しました。\n10分ほど待ってからもう一度実行してみてください。\nそれでも解決しない場合は以下の情報を添付してお問い合わせ下さい。 \n"+res["message"]);
                     return;
                 }
-                document.getElementById("download_status").style.display = "block";
-                document.getElementById("download_progress").style.width = data["progress"]+"%";
-                document.getElementById("download_history").innerText = data["history"];
-                download_history.scrollTop = download_history.scrollHeight;
+                var mods = res["mods"];
+                mods.forEach(mod=>{
+                    var option = document.createElement("option");
+                    option.value = mod;
+                    option.text = mod;
+                    mod_list.appendChild(option);
+                });
             }
-        });
-    </script>
-    <style>
-        body {
-            margin: 0px;
-        }
-        #main {
-            padding: 10px;
-        }
-        #file_list th {
-            text-align: left;
-            color: #888;
-        }
-    </style>
-    <div id="main">
-        <h1 style="margin:0px;">ヒノMODダウンローダー</h1>
-        <button onclick="(async function(){await refresh_mods();})();" id="refresh_mods">MOD一覧を更新</button>
-        <select id="mod_list" size="4" style="width:100%;outline:0;margin-top:7px;">
-        </select>
-        <hr>
-        現在選択中: <span id="selected"></span><br>
-        <button id="download_btn" onclick="if (confirm(document.getElementById('mod_list').value+'をダウンロードします。\nこの操作を実行すると、現在のmodsフォルダの名前を変更します。\n※消滅対策のため\n\nダウンロードを開始しますか？')){(async function(){await eel.download_mod(document.getElementById('mod_list').value);})();}">ダウンロード</button>
-        <div id="download_status" style="display:none;">
+            window.addEventListener("load", async function(){
+                await refresh_mods();
+                document.getElementById("mod_list").addEventListener("change", function(){
+                    document.getElementById("download_btn").disabled = false;
+                    document.getElementById("selected").innerText = document.getElementById("mod_list").value;
+                });
+                eel.expose(update_downloading_progress);
+                function update_downloading_progress(data) {
+                    if (data["is_done"]){
+                        if (data["success"]){alert("ダウンロードが完了しました。");}else{alert("ダウンロードに失敗しました。\n保存先のフォルダが存在しないか、編集権限がありません。");}
+                    }
+                    if (!data["downloading"]){
+                        document.getElementById("download_progress").style.width = "0%";
+                        document.getElementById("download_status").style.display = "none";
+                        document.getElementById("refresh_mods").disabled = false;
+                        document.getElementById("download_btn").disabled = false;
+                        document.getElementById("mods_path").readOnly = false;
+                        return;
+                    }
+                    document.getElementById("download_status").style.display = "block";
+                    document.getElementById("download_progress").style.width = data["progress"]+"%";
+                    document.getElementById("download_history").innerText = data["history"];
+                    document.getElementById("mods_path").readOnly = true;
+                    download_history.scrollTop = download_history.scrollHeight;
+                }
+                document.getElementById("mods_path").value = await eel.get_mods_path()();
+            });
+        </script>
+        <style>
+            body {
+                margin: 0px;
+            }
+            #main {
+                padding: 10px;
+            }
+            #file_list th {
+                text-align: left;
+                color: #888;
+            }
+        </style>
+        <div id="main">
+            <h1 style="margin:0px;">ヒノMODダウンローダー</h1>
+            <button onclick="(async function(){await refresh_mods();})();" id="refresh_mods">MOD一覧を更新</button>
+            <select id="mod_list" size="4" style="width:100%;outline:0;margin-top:7px;">
+            </select>
             <hr>
-            <h2>ダウンロード状況</h2>
-            <div style="height:15px;width:calc(100% - 2px);background:#eee;border:solid 1px #aaa;"><div id="download_progress" style="height:100%;width:0%;background:#5c5;"></div></div>
-            <div style="border:solid 1px #555;padding:2px;margin-top:10px;height:100px;font-style:monospace;font-size:0.75em;overflow:scroll;" id="download_history"></div>
+            選択中: <span id="selected"></span><br>
+            保存先: <input id="mods_path" style="width:100%;" autocomplete="off" placeholder="保存先パス">※「保存先」の編集は非推奨です。<br>
+            <button id="download_btn" onclick="if (confirm(document.getElementById('mod_list').value+'をダウンロードします。\nこの操作を実行すると、上書きを避けるために現在のmodsフォルダの名前を変更します。\n\nダウンロードを開始しますか？')){(async function(){await eel.download_mod(document.getElementById('mod_list').value,document.getElementById('mods_path').value);})();}">ダウンロード</button>
+            <div id="download_status" style="display:none;">
+                <hr>
+                <h2>ダウンロード状況</h2>
+                <div style="height:15px;width:calc(100% - 2px);background:#eee;border:solid 1px #aaa;"><div id="download_progress" style="height:100%;width:0%;background:#5c5;"></div></div>
+                <div style="border:solid 1px #555;padding:2px;margin-top:10px;height:100px;font-style:monospace;font-size:0.75em;overflow:scroll;" id="download_history"></div>
+            </div>
         </div>
-    </div>
-</body>
+    </body>
 </html>
