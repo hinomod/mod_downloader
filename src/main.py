@@ -27,7 +27,7 @@ def get_mods():
         message = "ステータスコード: "+str(res.status_code)
         if "message" in files:
             message += "\nエラーメッセージ: "+files["message"]
-        return {"success":False,"message":files["message"]}
+        return {"success":False,"message":message}
     mods = []
     for file in files:
         if file["type"] == "dir":
@@ -50,7 +50,7 @@ def download_mod(mod,mods_dir=None):
         message = "ステータスコード: "+str(res.status_code)
         if "message" in files:
             message += "\nエラーメッセージ: "+files["message"]
-        return {"success":False,"message":files["message"]}
+        return {"success":False,"message":message}
     temp_dir = tempfile.mkdtemp().replace("\\","/")
     os.mkdir(temp_dir+"/mods")
     total = 0
@@ -68,9 +68,7 @@ def download_mod(mod,mods_dir=None):
                 except:time.sleep(1)
             if res.status_code != 200:
                 message = "ステータスコード: "+str(res.status_code)
-                if "message" in files:
-                    message += "\nエラーメッセージ: "+files["message"]
-                return {"success":False,"message":files["message"]}
+                return {"success":False,"message":message}
             with open(temp_dir+"/mods/"+file["name"], "wb") as f:
                 for data in res.iter_content(1024):
                     f.write(data)
